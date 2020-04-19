@@ -46,7 +46,9 @@ EXCHANGES = ("binance", "hitbtc", "kucoin")
 GOODLIST = ["USDT", "USD"]
 BASE_CURRENCY = "BTC"
 
-CSV_FILE_PATH = f"csv/csv_file{MASTER_TIMESTAMP}.csv"
+CSV_FILE_PATH_PLACED = f"csv/placed/csv_file{MASTER_TIMESTAMP}.csv"
+CSV_FILE_PATH_NONE =  f"csv/none/csv_file{MASTER_TIMESTAMP}.csv"
+
 SPACE = TK.spacer
 LINE = TK.liner
 # seperator = u"\u2015"*42
@@ -363,7 +365,7 @@ def write_csv_data_to_disk(
 # @DK.print_timing
 
 
-def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spacer=""):
+def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spacer=""):
 
     orderbooks_N = sanitize_data(toolkit, orderbooks, GOODLIST)
 
@@ -507,12 +509,10 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
                 description=None
                 args_list+=[proceed,  description ]
                 display_run(*args_list)
-
-                CSV_FILE_PATH = os.path.join(CSV_FILE_PATH, "Placed")
                 
                 args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US", "proceed", "description"]
                 write_csv_data_to_disk(
-                    CSV_FILE_PATH+"Ordered",
+                    CSV_FILE_PATH_PLACED,
                     run,
                     args_list_headers,
                     args_list
@@ -528,10 +528,10 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
         #      display_run(*args_list)
                            
     args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US"]
-    CSV_FILE_PATH = os.path.join(CSV_FILE_PATH, "None")
+
                     
     write_csv_data_to_disk(
-        CSV_FILE_PATH,
+        CSV_FILE_PATH_NONE,
         run,
         args_list_headers,
         args_list
@@ -601,7 +601,7 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
     # headers = ["now","run","base_sym","sym","top_bid_xch","top_ask_xch","top_bid_prc_USD","top_ask_prc_USD","top_bid_qty_BTC","top_ask_qty_BTC","bid_acct_bal_BTC","ask_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_USD","qty_multiplier","MAXPROFIT","PROFIT","ADJ_top_bid_prc_USD","ADJ_top_ask_prc_USD","ADJ_MAXPROFIT","ADJ_PROFIT","TTL_BALANCE"]
     # data_list = [now,run,b_sym,sym,top_bid_xch,top_ask_xch,top_bid_prc_USD,top_ask_prc_USD,top_bid_qty_BTC,top_ask_qty_BTC,bid_acct_bal_BTC,ask_acct_bal_BTC,bid_acct_bal_USD,ask_acct_bal_USD,qty_multiplier,MAXPROFIT,PROFIT, ADJ_top_bid_prc_USD, ADJ_top_ask_prc_USD, ADJ_MAXPROFIT,ADJ_PROFIT,TTL_BALANCE]
 
-    # write_csv_data_to_disk(CSV_FILE_PATH, run,headers, data_list)
+    # write_csv_data_to_disk(csv_file_path, run,headers, data_list)
     # xch_status.append([PROFIT, ADJ_PROFIT])
 
     # print_form(form)("Sell {1} BTC on {} to receive {}")
