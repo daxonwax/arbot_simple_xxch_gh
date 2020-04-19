@@ -1,0 +1,7 @@
+ujson==1.35
+shrimpy_python==0.0.12
+readchar==2.0.1
+colorful==0.5.4
+tabulate==0.8.6
+jsonpickle==1.2
+shrimpy==0.1.13
