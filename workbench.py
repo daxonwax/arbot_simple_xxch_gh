@@ -218,6 +218,7 @@ def display_run(
             pro_rated_bid_inc_fees_USD,
             pro_rated_ask_inc_fees_USD,
             pro_rated_profit_inc_fees_USD,
+            MAXPROFIT_USD,
             TTL_BALANCE_BTC,
             TTL_BALANCE_USD,
             proceed=False,
@@ -225,6 +226,7 @@ def display_run(
 
 
             ):
+    os.system("clear")
     SPACE(vertical=1)
     toolkit.cprint_inspect(now, fg_color="lightOrange")
     toolkit.cprint_inspect(run, fg_color="lightOrange")
@@ -266,6 +268,15 @@ def display_run(
             fg_color="ghostWhite",
             bg_color="green"
                         )
+    
+        SPACE(vertical=1)
+        LINE()
+        SPACE(vertical=1)
+        if float(MAXPROFIT_USD)<0:
+            toolkit.cprint_inspect(MAXPROFIT_USD, , fg_color="magenta")   
+        else:
+            toolkit.cprint_inspect(MAXPROFIT_USD, , fg_color="ghostWhite", bg_color="blue")             
+    
     
         SPACE(vertical=1)
         LINE()
@@ -522,10 +533,13 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
                     args_list_headers,
                     args_list
                 )
-                
-                
-                
-                
+                write_csv_data_to_disk(
+                    CSV_FILE_PATH_NONE,
+                    run,
+                    args_list_headers,
+                    args_list
+                )
+            
                 toolkit.quitter(True)
 
                             
@@ -629,7 +643,6 @@ def main():
     number_of_runs=input("How many consequetive runs:   ")
     delay=input("Delay between runs (secs):    ")
     for RUN in range(int(number_of_runs)):  # while True:
-        os.system("clear")
         NOW = TK.create_timestamp(forfile=True)
         if BALANCE_FLAG:
             BALANCE_DICT = get_account_balances(SK, TK, GOODLIST)
