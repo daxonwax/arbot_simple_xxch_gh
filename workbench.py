@@ -273,9 +273,9 @@ def display_run(
         LINE()
         SPACE(vertical=1)
         if float(MAXPROFIT_USD)<0:
-            toolkit.cprint_inspect(MAXPROFIT_USD, , fg_color="magenta")   
+            toolkit.cprint_inspect(MAXPROFIT_USD, fg_color="magenta")   
         else:
-            toolkit.cprint_inspect(MAXPROFIT_USD, , fg_color="ghostWhite", bg_color="blue")             
+            toolkit.cprint_inspect(MAXPROFIT_USD, fg_color="ghostWhite", bg_color="blue")             
     
     
         SPACE(vertical=1)
