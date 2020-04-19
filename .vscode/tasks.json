@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "command": "python3",
+    "args": [
+        "-u",
+        "${file}"
+    ],
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    },
+    "presentation": {
+        "clear": true,
+        "focus": true,                        // <-- this line
+    }
+}

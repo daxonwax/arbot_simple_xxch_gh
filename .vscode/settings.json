@@ -1,0 +1,44 @@
+{
+    "python.pythonPath": "/usr/local/bin/python3",
+ 
+
+    "macros": {
+        "printify": [
+            "editor.action.copyLinesDownAction",
+            "cursorUp",
+            "editor.action.addCommentLine",
+            "cursorDown"
+        ]
+    },
+    "editor.fontFamily": "Hasklig, SF Mono,   Hasklig,  Fantasque Sans Mono,  Space Mono,  Roboto Mono,Fira Code,  ",
+    "terminal.integrated.fontSize": 10,
+    "terminal.integrated.fontFamily": "SF Mono",
+    "editor.quickSuggestionsDelay": 100,
+    "editor.smoothScrolling": true,
+    "terminal.integrated.scrollback": 100000000,
+    "python.linting.banditEnabled": true,
+    "python.linting.enabled": false,
+    "editor.formatOnSave": true,
+    "editor.autoClosingQuotes": "always",
+    "editor.detectIndentation": false,
+    "python.formatting.provider": "black"
+
+
+    // "/usr/local/opt/python/bin/python3.7",
+    // "macros": {
+    //     "printify": [
+    //         "cursorHome",
+    //         {
+    //             "command": "type", "args": {
+    //                 "text": "print("
+    //                 }
+    //             },
+    //         "cursorEnd",
+    //         {
+    //             "command": "type", "args": {
+    //                 "text": ")"
+    //                 }
+    //             }
+    //     ]
+    // }
+}
