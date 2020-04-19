@@ -355,12 +355,17 @@ def write_csv_data_to_disk(
 ):
     if run > 0:
         data_array = [data_list]
+        TK.CSVFilePrinter(
+            csv_file_path,
+            data_array,
+        )
     else:
         data_array = [headers, data_list]
-    TK.CSVFilePrinter(
-        csv_file_path,
-        data_array,
-    )
+        TK.CSVFilePrinter(
+            csv_file_path,
+            data_array,
+            WriteVsAppend="w"
+        )
 
 # @DK.print_timing
 
