@@ -322,26 +322,26 @@ def display_run(
 
 
 def place_order(
-        xch,
-        base_sym,
-        quote_sym,
-        asset_amount
-        ):
-    #  create_trade_response = SK.client.create_trade(
-    #     credentials.passport["Shrimpy"]["USER_ID"],
-    #     credentials.passport["Shrimpy"]["ACCOUNTS"][top_bid_xch],
-    #     "BTC",
-    #     SK.safe_currency("USDT", top_bid_xch),
-    #     asset_amount
-    # )
-
-    return (
-        credentials.passport["shrimpy"]["USER_ID"],
-         credentials.passport["shrimpy"]["ACCOUNTS"][xch.lower()],
-        base_sym,
-        SK.safe_currency(quote_sym,  xch.lower()),
-        asset_amount
-    )
+    xch,
+    base,
+    quote,
+    asset_amount
+     ):
+        create_trade_response = SK.client.create_trade(
+            credentials.passport["Shrimpy"]["USER_ID"],
+            credentials.passport["Shrimpy"]["ACCOUNTS"][xch],
+            base,
+            SK.safe_currency(quote, xch),
+            asset_amount
+        )
+        print(
+            credentials.passport["shrimpy"]["USER_ID"],
+            credentials.passport["shrimpy"]["ACCOUNTS"][xch.lower()],
+            base,
+            SK.safe_currency(quote,  xch.lower()),
+            asset_amount
+        )
+        return create_trade_response
 
 
 # @DK.print_timing
@@ -525,8 +525,14 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
         # else:
         #      display_run(*args_list)
                            
-                           
-
+    args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US"]
+                    
+    write_csv_data_to_disk(
+        CSV_FILE_PATH,
+        run,
+        args_list_headers,
+        args_list
+    )
         
         
         
@@ -608,11 +614,13 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
 # @DK.print_timing
 def main():
     
-    RUN = 0
+
     BALANCE_FLAG = True
 
     # TK.countdown(3)
-    for _ in range(11):  # while True:
+    number_of_runs=input("How many consequetive runs:   ")
+    delay=input("Delay between runs (secs):    ")
+    for RUN in range(int(number_of_runs)):  # while True:
         os.system("clear")
         NOW = TK.create_timestamp(forfile=True)
         if BALANCE_FLAG:
@@ -625,8 +633,7 @@ def main():
 
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
         # print(BALANCE_DICT)
-        RUN += 1
-        TM.sleep(0.25)
+        TM.sleep(float(delay))
 
         
 
