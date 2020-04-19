@@ -502,23 +502,25 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
                         place_order, [order_arg for order_arg in orders]
                     )
                 print(tabulate(results))
-                # place_order(
-                #     top_bid_xch,
-                #     base_sym,
-                #     quote_sym,
-                #     0.01
-                #     )
 
-                # place_order(
-                #     top_ask_xch,
-                #     quote_sym,
-                #     base_sym,
-                #     pro_rata_ask_USD
-                # )
                 proceed=True
                 description=None
                 args_list+=[proceed,  description ]
                 display_run(*args_list)
+
+                CSV_FILE_PATH = os.path.join(CSV_FILE_PATH, "Placed")
+                
+                args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US", "proceed", "description"]
+                write_csv_data_to_disk(
+                    CSV_FILE_PATH+"Ordered",
+                    run,
+                    args_list_headers,
+                    args_list
+                )
+                
+                
+                
+                
                 toolkit.quitter(True)
 
                             
@@ -526,6 +528,7 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values, xch_status=[], spac
         #      display_run(*args_list)
                            
     args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US"]
+    CSV_FILE_PATH = os.path.join(CSV_FILE_PATH, "None")
                     
     write_csv_data_to_disk(
         CSV_FILE_PATH,
