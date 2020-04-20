@@ -202,7 +202,7 @@ def display_run(
             TTL_BALANCE_USD_O=None,
 
             ):
-    # os.system("clear")
+    os.system("clear")
     SPACE(vertical=1)
     toolkit.cprint_inspect(now, fg_color="lightOrange")
     toolkit.cprint_inspect(run, fg_color="lightOrange")
@@ -398,12 +398,12 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
         if (PRORATA_PROFIT_USD > THRESHOLD and bid_acct_bal_BTC > pro_rata_bid_USD and ask_acct_bal_USD > pro_rata_ask_USD):
             with multiprocessing.dummy.Pool(2) as pool:
                 results = pool.starmap(place_order, [order_arg for order_arg in orders])   
-                print(results)
+
             try:
                 statii = [[top_bid_xch, results[0] ['id']], [top_ask_xch, results[1] ['id']]]
                 with multiprocessing.dummy.Pool(2) as pool:
                     status = pool.starmap(order_status, [status_id for status_id in statii])
-                    print(status)
+
             except Exception as e:
                 print(e)
     
@@ -416,6 +416,7 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
             # write_csv_data_to_disk(tabulate(results))
             TK.JSON_file_writer(JSON_FILE_PATH, status)
             TK.CSVFilePrinter(CSV_FILE_PATH_PLACED, results, "w")
+            print(status)
             toolkit.quitter(True)
 
 
