@@ -9,24 +9,18 @@ CAUTION: quantities (eg top_bid_qty_BTC) may have to be in string format, not fl
 
 # import inspect
 
-import time as TM
-# from itertools import product
-# from multiprocessing.dummy import Pool as ThreadPool
+import decimal
 import multiprocessing.dummy
-# import shrimpy
-# from sorcery import dict_of
-from tabulate import tabulate
-# import common_exchange_pairs
-
-
 import os
+import time as TM
+
+from tabulate import tabulate
 
 import credentials
 import fee_schedule
 import k_decoratorKit
 import k_shrimpyKit
 import k_toolKit
-
 
 PUBLIC_KEY = credentials.passport["shrimpy"]["API_KEY"]
 PRIVATE_KEY = credentials.passport["shrimpy"]["API_SECRET"]
@@ -35,7 +29,6 @@ TK = k_toolKit.Toolkit()
 SK = k_shrimpyKit.Shrimpykit(PUBLIC_KEY, PRIVATE_KEY)
 DK = k_decoratorKit.Decoratorkit()
 MASTER_TIMESTAMP = TK.create_timestamp(forfile=True)
-
 # EXCHANGE_PAIRS = common_exchange_pairs.exchange_pairs
 THRESHOLD = 0.50
 PRO_RATA_MULTIPLIER = 0.01
@@ -45,45 +38,38 @@ EXCHANGES = ("binance", "hitbtc", "kucoin")
 # GOODLIST = ["PAX", "USDT", "USDC", "TUSD", "USD"]
 GOODLIST = ["USDT", "USD"]
 BASE_CURRENCY = "BTC"
-
 CSV_FILE_PATH_PLACED = f"csv/placed/csv_file{MASTER_TIMESTAMP}.csv"
 CSV_FILE_PATH_NONE =  f"csv/none/csv_file{MASTER_TIMESTAMP}.csv"
-
+JSON_FILE_PATH = f"json/json_file{MASTER_TIMESTAMP}.json"
 SPACE = TK.spacer
 LINE = TK.liner
-# seperator = u"\u2015"*42
+SEP = u"\u2015"*42
 _ = "                        _"
 top_bid_prc_BTC = 0.01
 pro_rata_bid_BTC = 0.01
-# "sell_on" : f"sell on {top_bid_xch:<9} for {float(top_bid - bid_fee):<.7f}",
-# "buy_on" : f"buy on {top_ask_xch:<10} for {float(top_ask - ask_fee):<.7f}",
 
-
-# get_account_balances took 2080745.254 microseconds
 
 # @DK.print_timing
-def get_account_balances(SK,
-                         TK,
-                         approved_list_of_syms,
-                         storage_dictionary={},
-                         ):
+def get_account_balances(
+    SK,
+    TK,
+    approved_list_of_syms,
+    storage_dictionary={},
+    ):
 
     for xch in credentials.passport["shrimpy"]["ACCOUNTS"]:
-
         storage_dictionary[xch] = {}
-
         balance = SK.client.get_balance(
             credentials.passport["shrimpy"]["USER_ID"],
             credentials.passport["shrimpy"]["ACCOUNTS"][xch]["ID"],
         )
-
         for entry in balance["balances"]:
-            sym = entry["symbol"]
-            if sym in approved_list_of_syms:
+            quote_sym = entry["symbol"]
+            if quote_sym in approved_list_of_syms:
                 nativeValue = entry["nativeValue"]
                 btcValue = entry["btcValue"]
                 usdValue = entry["usdValue"]
-                storage_dictionary[xch]["symbol"] = sym
+                storage_dictionary[xch]["symbol"] = quote_sym
                 storage_dictionary[xch]["nativeValue"] = nativeValue
                 storage_dictionary[xch]["btcValue"] = btcValue
                 storage_dictionary[xch]["usdValue"] = usdValue
@@ -122,8 +108,6 @@ def organize_data(sym_data):
     return base_syms, quote_syms, xchs, bid_prcs, bid_qtys, ask_prcs, ask_qtys
 
 # @DK.print_timing
-
-
 def find_top_bid_ask(
         base_syms, quote_syms, xchs,  bid_prcs, bid_qtys, ask_prcs, ask_qtys):
 
@@ -160,11 +144,9 @@ def map_top_xch_to_balance(balance_values, top_bid_xch, top_ask_xch):
 
     return bid_acct_bal_BTC, bid_acct_bal_USD, ask_acct_bal_BTC, ask_acct_bal_USD
 
-
 # @DK.print_timing
 def calculate_fees(xch,  fee_class="trading"):
     return fee_schedule.fees[xch.lower()][fee_class]
-
 
 # @DK.print_timing
 def calculate_profit(
@@ -176,26 +158,19 @@ def calculate_profit(
 
     return bid_inc_fees, ask_inc_fees, profit_inc_fees
 
-
 # @DK.print_timing
 def update_maxprofit(profit, maxprofit):
     return max(profit, maxprofit)
 
 # @DK.print_timing
-
-
 def pro_rate(val, rate_amt=PRO_RATA_MULTIPLIER):
     return val*rate_amt
 
 # @DK.print_timing
-
-
 def update_profit(profit_list):
     return [pro_rate(val) for val in profit_list]
 
 # @DK.print_timing
-
-
 def display_run(
             toolkit,
             now,
@@ -219,17 +194,25 @@ def display_run(
             pro_rated_ask_inc_fees_USD,
             pro_rated_profit_inc_fees_USD,
             MAXPROFIT_USD,
-            TTL_BALANCE_BTC,
-            TTL_BALANCE_USD,
+            TTL_BALANCE_BTC_I,
+            TTL_BALANCE_USD_I,
             proceed=False,
             description=None,
-
+            TTL_BALANCE_BTC_O=None, 
+            TTL_BALANCE_USD_O=None,
 
             ):
-    os.system("clear")
+    # os.system("clear")
     SPACE(vertical=1)
     toolkit.cprint_inspect(now, fg_color="lightOrange")
     toolkit.cprint_inspect(run, fg_color="lightOrange")
+    toolkit.cprint_inspect(TTL_BALANCE_BTC_I, fg_color="lightOrange")
+    toolkit.cprint_inspect(TTL_BALANCE_USD_I, fg_color="lightOrange")
+    
+    SPACE(vertical=1)
+    LINE()
+    SPACE(vertical=1)
+    toolkit.multiprint([bid_acct_bal_BTC, ask_acct_bal_USD])
 
     SPACE(vertical=1)
     toolkit.multiprint([base_sym, quote_sym])
@@ -248,45 +231,31 @@ def display_run(
     toolkit.cprint_inspect(top_ask_prc_USD, fg_color="lightGray")
     toolkit.cprint_inspect(top_ask_fee_USD, fg_color="gray")
     toolkit.cprint_inspect(ask_inc_fees_USD, fg_color="gray")
-    toolkit.cprint_inspect(pro_rated_ask_inc_fees_USD, fg_color="lightOrange")
+    toolkit.cprint_inspect(pro_rated_ask_inc_fees_USD, fg_color="blue")
     # toolkit.multiprint([pro_rated_ask_inc_fees_USD])
     SPACE(vertical=1)
     SPACE(vertical=1)
     toolkit.cprint_inspect(
-    pro_rated_profit_inc_fees_USD,
-    fg_color=toolkit.create_truthy_index(
-        pro_rated_profit_inc_fees_USD)["fg_color"],
-    bg_color=toolkit.create_truthy_index(pro_rated_profit_inc_fees_USD)["bg_color"])
+        pro_rated_profit_inc_fees_USD,
+        fg_color=toolkit.color_palette(toolkit.isprofitable(pro_rated_profit_inc_fees_USD), 0)["fg_color"],
+        bg_color=toolkit.color_palette(toolkit.isprofitable(pro_rated_profit_inc_fees_USD), 0)["bg_color"]
+    )
+    toolkit.cprint_inspect(
+        MAXPROFIT_USD,
+        fg_color=toolkit.color_palette(toolkit.isprofitable(MAXPROFIT_USD), 1)["fg_color"],
+        bg_color=toolkit.color_palette(toolkit.isprofitable(MAXPROFIT_USD), 1)["bg_color"]
+    )
 
+    SPACE(vertical=1)
+    LINE()
+    LINE()
+    
     if proceed:
-        SPACE(vertical=1)
-        LINE()
-        LINE()
-        SPACE(vertical=1)
         toolkit.cprint(
              "            ARBITRAGE OPPORTUNITY          ",
             fg_color="ghostWhite",
             bg_color="green"
                         )
-    
-        SPACE(vertical=1)
-        LINE()
-        SPACE(vertical=1)
-        if float(MAXPROFIT_USD)<0:
-            toolkit.cprint_inspect(MAXPROFIT_USD, fg_color="magenta")   
-        else:
-            toolkit.cprint_inspect(MAXPROFIT_USD, fg_color="ghostWhite", bg_color="blue")             
-    
-    
-        SPACE(vertical=1)
-        LINE()
-        SPACE(vertical=1)
-        toolkit.multiprint([bid_acct_bal_BTC, ask_acct_bal_USD])
-
-        SPACE(vertical=1)
-
-        LINE()
-        SPACE(vertical=1)
         print(
             f"   @{top_bid_xch:<8}: {float(0.01):>7.03f} BTC   >>>    {float(pro_rated_bid_inc_fees_USD):>7.03f} USDT")
         # print(f"Buy 1 BTC on {top_ask_xch} for {top_ask_prc_USD }")
@@ -296,17 +265,13 @@ def display_run(
         SPACE(vertical=1)
         LINE()
         SPACE(vertical=1)
-        toolkit.cprint_inspect(TTL_BALANCE_BTC)
-        toolkit.cprint_inspect(TTL_BALANCE_USD)
+        toolkit.cprint_inspect(TTL_BALANCE_BTC_O, fg_color="lightOrange")
+        toolkit.cprint_inspect(TTL_BALANCE_USD_O, fg_color="lightOrange")
         SPACE(vertical=1)
         LINE()
         LINE()
 
     else:
-        SPACE(vertical=1)
-        LINE()
-        LINE()
-        SPACE(vertical=1)
         toolkit.cprint(
              "        NO ARBITRAGE OPPORTUNITY            ",
             fg_color="ghostWhite",
@@ -333,7 +298,7 @@ def display_run(
             bg_color="darkGray"
                         )
 
-
+# @DK.print_timing
 def place_order(
     xch,
     base,
@@ -341,20 +306,32 @@ def place_order(
     asset_amount
      ):
         create_trade_response = SK.client.create_trade(
-            credentials.passport["Shrimpy"]["USER_ID"],
-            credentials.passport["Shrimpy"]["ACCOUNTS"][xch],
-            base,
-            SK.safe_currency(quote, xch),
-            asset_amount
-        )
-        print(
             credentials.passport["shrimpy"]["USER_ID"],
-            credentials.passport["shrimpy"]["ACCOUNTS"][xch.lower()],
-            base,
-            SK.safe_currency(quote,  xch.lower()),
-            asset_amount
+            credentials.passport["shrimpy"]["ACCOUNTS"][str(xch).lower()]["ID"],
+            SK.safe_currency(base, xch ),
+            SK.safe_currency(quote, xch),
+            float(decimal.Decimal(asset_amount).quantize(decimal.Decimal(".00000001"), rounding=decimal.ROUND_DOWN ))
         )
+        # print(
+        #     credentials.passport["shrimpy"]["USER_ID"],
+        #     credentials.passport["shrimpy"]["ACCOUNTS"][xch.lower()],
+        #     base,
+        #     SK.safe_currency(quote,  xch.lower()),
+        #     asset_amount
+        # )
         return create_trade_response
+
+
+
+def order_status(xch, status_id):
+    status = SK.client.get_trade_status(
+    credentials.passport["shrimpy"]["USER_ID"], # user_id
+    credentials.passport["shrimpy"]["ACCOUNTS"][str(xch).lower()]["ID"],         # xch_account_id
+    str(status_id)  # trade_id
+    )
+    return status
+
+
 
 
 # @DK.print_timing
@@ -363,7 +340,7 @@ def write_csv_data_to_disk(
     run,
     headers,
     data_list
-):
+    ):
     if run > 0:
         data_array = [data_list]
         TK.CSVFilePrinter(
@@ -379,114 +356,68 @@ def write_csv_data_to_disk(
         )
 
 # @DK.print_timing
+def collect_balance_figures(balance_values):
+    TTL_BALANCE_BTC = sum(balance_values[xch]["btcValue"]for xch in balance_values)
+    TTL_BALANCE_USD = sum(balance_values[xch]["usdValue"]for xch in balance_values)        
+    return TTL_BALANCE_BTC, TTL_BALANCE_USD
 
 
+
+# @DK.print_timing
 def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spacer=""):
 
+    TTL_BALANCE_BTC_I, TTL_BALANCE_USD_I = collect_balance_figures(balance_values)       
+    TTL_BALANCE_BTC_O, TTL_BALANCE_USD_O = 0, 0
     orderbooks_N = sanitize_data(toolkit, orderbooks, GOODLIST)
 
-    for idx, [sym, sym_data] in enumerate(orderbooks_N.items()):
-        (
-            base_syms,
-            quote_syms,
-            xchs,
-            bid_prcs,
-            bid_qtys,
-            ask_prcs,
-            ask_qtys
-        ) = organize_data(sym_data)
+    for idx, [quote_sym, sym_data] in enumerate(orderbooks_N.items()):
+        base_syms, quote_syms, xchs, bid_prcs, bid_qtys, ask_prcs, ask_qtys = organize_data(sym_data)
 
-        (
-            base_sym,
-            quote_sym,
-            top_bid_xch,
-            top_bid_prc_USD,
+        (base_sym, quote_sym, top_bid_xch, top_bid_prc_USD, top_bid_qty_BTC, top_ask_xch, top_ask_prc_USD, top_ask_qty_BTC) = find_top_bid_ask(
+            base_syms,quote_syms,xchs,bid_prcs,bid_qtys,ask_prcs,ask_qtys)
 
-            top_bid_qty_BTC,
+        (  bid_acct_bal_BTC,  bid_acct_bal_USD,  ask_acct_bal_BTC,  ask_acct_bal_USD) = map_top_xch_to_balance( balance_values, top_bid_xch, top_ask_xch)
 
-            top_ask_xch,
-            top_ask_prc_USD,
+        top_bid_fee = calculate_fees(top_bid_xch)
+        top_ask_fee = calculate_fees(top_ask_xch)
 
-            top_ask_qty_BTC
+        ( bid_inc_fees_USD, ask_inc_fees_USD, profit_inc_fees_USD) = calculate_profit( top_bid_prc_USD, top_ask_prc_USD, top_bid_fee, top_ask_fee)
 
-        ) = find_top_bid_ask(
-            base_syms,
-            quote_syms,
-            xchs,
-            bid_prcs,
-            bid_qtys,
-            ask_prcs,
-            ask_qtys
-        )
-
-        (
-            bid_acct_bal_BTC,
-            bid_acct_bal_USD,
-            ask_acct_bal_BTC,
-            ask_acct_bal_USD
-        ) = map_top_xch_to_balance(
-            balance_values,
-            top_bid_xch,
-            top_ask_xch
-            )
-
-        # os.system("clear")
-
-        top_bid_fee = calculate_fees(
-            top_bid_xch
-        )
-
-        top_ask_fee = calculate_fees(
-            top_ask_xch
-        )
-
-        (
-            bid_inc_fees_USD,
-            ask_inc_fees_USD,
-            profit_inc_fees_USD
-        ) = calculate_profit(
-            top_bid_prc_USD,
-            top_ask_prc_USD,
-            top_bid_fee,
-            top_ask_fee
-        )
-
-        (
-       pro_rata_bid_USD,
-       pro_rata_ask_USD,
-       PRO_RATA_PROFIT_USD
-        ) = update_profit(
-            [
-                bid_inc_fees_USD,
-                ask_inc_fees_USD,
-                profit_inc_fees_USD
-            ]
-        )
+        ( pro_rata_bid_USD, pro_rata_ask_USD, PRORATA_PROFIT_USD ) = update_profit([bid_inc_fees_USD, ask_inc_fees_USD, profit_inc_fees_USD])
         
         global MAXPROFIT_USD
-        MAXPROFIT_USD = update_maxprofit(PRO_RATA_PROFIT_USD, MAXPROFIT_USD)
-
-        TTL_BALANCE_BTC = sum(balance_values[xch]["btcValue"]
-                        for xch in balance_values)
-
-        TTL_BALANCE_USD = sum(balance_values[xch]["usdValue"]
-                        for xch in balance_values)        
+        MAXPROFIT_USD = update_maxprofit(PRORATA_PROFIT_USD, MAXPROFIT_USD)
         
-        args_list = [toolkit, now, run, base_sym, quote_sym, top_bid_xch, top_ask_xch, bid_acct_bal_BTC, bid_acct_bal_USD, ask_acct_bal_BTC, ask_acct_bal_USD, top_bid_prc_USD, top_ask_prc_USD, top_bid_fee, top_ask_fee, bid_inc_fees_USD,    ask_inc_fees_USD, profit_inc_fees_USD, pro_rata_bid_USD, pro_rata_ask_USD, PRO_RATA_PROFIT_USD, TTL_BALANCE_BTC, TTL_BALANCE_USD]
-        orders = [
-            [
-                    top_bid_xch,
-                    base_sym,
-                    quote_sym,
-                    pro_rata_bid_BTC
-            ],
-            [
-                    top_ask_xch,
-                    quote_sym,
-                    base_sym,
-                    pro_rata_ask_USD
-            ]
-        ]
+
+        
+        args_list = [toolkit, now, run, base_sym, quote_sym, top_bid_xch, top_ask_xch, bid_acct_bal_BTC, bid_acct_bal_USD, ask_acct_bal_BTC, ask_acct_bal_USD, top_bid_prc_USD, top_ask_prc_USD, top_bid_fee, top_ask_fee, bid_inc_fees_USD,    ask_inc_fees_USD, profit_inc_fees_USD, pro_rata_bid_USD, pro_rata_ask_USD, PRORATA_PROFIT_USD, MAXPROFIT_USD,  TTL_BALANCE_BTC_I, TTL_BALANCE_USD_I]
+        args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRORATA_PROFIT_USD", "MAXPROFIT_USD", "TTL_BALANCE_BTC_IN","TTL_BALANCE_US_IN", "proceed", "description"]
+       
+        orders = [[top_bid_xch, base_sym, quote_sym, pro_rata_bid_BTC], [ top_ask_xch, quote_sym, base_sym, pro_rata_ask_USD]]
+
+        if (PRORATA_PROFIT_USD > THRESHOLD and bid_acct_bal_BTC > pro_rata_bid_USD and ask_acct_bal_USD > pro_rata_ask_USD):
+            with multiprocessing.dummy.Pool(2) as pool:
+                results = pool.starmap(place_order, [order_arg for order_arg in orders])   
+                print(results)
+            try:
+                statii = [[top_bid_xch, results[0] ['id']], [top_ask_xch, results[1] ['id']]]
+                with multiprocessing.dummy.Pool(2) as pool:
+                    status = pool.starmap(order_status, [status_id for status_id in statii])
+                    print(status)
+            except Exception as e:
+                print(e)
+    
+            TTL_BALANCE_BTC_O, TTL_BALANCE_USD_O = collect_balance_figures(balance_values)        
+            proceed=True
+            description=None
+            args_list+=[proceed,  description,  TTL_BALANCE_BTC_O, TTL_BALANCE_USD_O]
+            args_list_headers+=['TL_BALANCE_BTC_OUT', 'TTL_BALANCE_USD_OUT']
+            display_run(*args_list)
+            # write_csv_data_to_disk(tabulate(results))
+            TK.JSON_file_writer(JSON_FILE_PATH, status)
+            TK.CSVFilePrinter(CSV_FILE_PATH_PLACED, results, "w")
+            toolkit.quitter(True)
+
 
         if bid_acct_bal_BTC <= pro_rata_bid_BTC:
             proceed=False
@@ -502,144 +433,23 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
             display_run(*args_list)
             toolkit.quitter(True)
             
-        if PRO_RATA_PROFIT_USD < THRESHOLD :
+        if PRORATA_PROFIT_USD < THRESHOLD :
             proceed=False
             description="threshold"  
             args_list+=[proceed, description ]
             display_run(*args_list)
-            # toolkit.quitter(True)
+            toolkit.quitter(False)
             
             
-        if (
-                PRO_RATA_PROFIT_USD > THRESHOLD and
-                bid_acct_bal_BTC > pro_rata_bid_USD and
-                ask_acct_bal_USD > pro_rata_ask_USD
-            ):
-                with multiprocessing.dummy.Pool(2) as pool:
-                    results = pool.starmap(
-                        place_order, [order_arg for order_arg in orders]
-                    )
-                print(tabulate(results))
-
-                proceed=True
-                description=None
-                args_list+=[proceed,  description ]
-                display_run(*args_list)
-                
-                args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US", "proceed", "description"]
-                write_csv_data_to_disk(
-                    CSV_FILE_PATH_PLACED,
-                    run,
-                    args_list_headers,
-                    args_list
-                )
-                write_csv_data_to_disk(
-                    CSV_FILE_PATH_NONE,
-                    run,
-                    args_list_headers,
-                    args_list
-                )
-            
-                toolkit.quitter(True)
-
-                            
-        # else:
-        #      display_run(*args_list)
-                           
-    args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRO_RATA_PROFIT_USD","TTL_BALANCE_BTC","TTL_BALANCE_US"]
-
-                    
-    write_csv_data_to_disk(
-        CSV_FILE_PATH_NONE,
-        run,
-        args_list_headers,
-        args_list
-    )
-        
-        
-        
-        
-        # display_run(
-        #     toolkit,
-        #     now,
-        #     run,
-        #     base_sym,
-        #     quote_sym,
-        #     top_bid_xch,
-        #     top_ask_xch,
-        #     bid_acct_bal_BTC,
-        #     bid_acct_bal_USD,
-        #     ask_acct_bal_BTC,
-        #     ask_acct_bal_USD,
-        #     top_bid_prc_USD,
-        #     top_ask_prc_USD,
-        #     top_bid_fee,
-        #     top_ask_fee,
-        #     bid_inc_fees_USD,   
-        #     ask_inc_fees_USD,
-        #     profit_inc_fees_USD,
-        #     pro_rata_bid_USD,
-        #     pro_rata_ask_USD,
-        #     PRO_RATA_PROFIT_USD,
-        #     TTL_BALANCE_BTC,
-        #     TTL_BALANCE_USD,
-        #     proceed=False,
-        #    description=None
-        #     )
-
-
-
-
-
-
-        # ,top_bid_prc_USD, top_ask_prc_USD, top_bid_qty_BTC, top_ask_qty_BTC,MAXPROFIT,])
-
-        # toolkit.multiprint(
-        #     [_,top_bid_qty_BTC, top_ask_qty_BTC, _, , _, ask_acct_bal_BTC, ask_acct_bal_USD,_, qty_multiplier, _,])
-        # ADJ_top_bid_prc_USD, ADJ_top_ask_prc_USD, ADJ_MAXPROFIT, ADJ_PROFIT = adjust_for_xch_qty(qty_multiplier,top_bid_qty_BTC, top_ask_qty_BTC, top_bid_prc_USD, top_ask_prc_USD, PROFIT)
-
-        # create_trade_response = SK.client.create_trade(
-        #     credentials.passport["Shrimpy"]["USER_ID"],
-        #     credentials.passport["Shrimpy"]["ACCOUNTS"][top_bid_xch],
-        #     "BTC",
-        #     SK.safe_currency("USDT", top_bid_xch),
-        #     asset_amount
-        # )
-        # bid = sell = from BTC = to USDT
-        # ask = buy = from USDT = to BTC
-
-        # SPACE(vertical=1)
-        # toolkit.multiprint([ADJ_top_bid_prc_USD, ADJ_top_ask_prc_USD, ADJ_MAXPROFIT,])
-        # toolkit.cprint_inspect(ADJ_PROFIT,fg_color=toolkit.create_truthy_index(ADJ_PROFIT)["fg_color"],bg_color=toolkit.create_truthy_index(ADJ_PROFIT)["bg_color"])
-    
-    
-
-    
-
-
-    # headers = ["now","run","base_sym","sym","top_bid_xch","top_ask_xch","top_bid_prc_USD","top_ask_prc_USD","top_bid_qty_BTC","top_ask_qty_BTC","bid_acct_bal_BTC","ask_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_USD","qty_multiplier","MAXPROFIT","PROFIT","ADJ_top_bid_prc_USD","ADJ_top_ask_prc_USD","ADJ_MAXPROFIT","ADJ_PROFIT","TTL_BALANCE"]
-    # data_list = [now,run,b_sym,sym,top_bid_xch,top_ask_xch,top_bid_prc_USD,top_ask_prc_USD,top_bid_qty_BTC,top_ask_qty_BTC,bid_acct_bal_BTC,ask_acct_bal_BTC,bid_acct_bal_USD,ask_acct_bal_USD,qty_multiplier,MAXPROFIT,PROFIT, ADJ_top_bid_prc_USD, ADJ_top_ask_prc_USD, ADJ_MAXPROFIT,ADJ_PROFIT,TTL_BALANCE]
-
-    # write_csv_data_to_disk(csv_file_path, run,headers, data_list)
-    # xch_status.append([PROFIT, ADJ_PROFIT])
-
-    # print_form(form)("Sell {1} BTC on {} to receive {}")
-    # print(f"Sell {1} BTC on {} to receive {}")
-    # bid = sell = from BTC = to USDT
-    # ask = buy = from USDT = to BTC
-
-
+    write_csv_data_to_disk(CSV_FILE_PATH_NONE,run,args_list_headers,args_list)
+       
     return xch_status
 
 
 
 # @DK.print_timing
 def main():
-    
-
     BALANCE_FLAG = True
-
-    # TK.countdown(3)
     number_of_runs=input("How many consequetive runs:   ")
     delay=input("Delay between runs (secs):    ")
     for RUN in range(int(number_of_runs)):  # while True:
@@ -647,17 +457,12 @@ def main():
         if BALANCE_FLAG:
             BALANCE_DICT = get_account_balances(SK, TK, GOODLIST)
             BALANCE_FLAG = False
-        orderbooks = SK.fetch_orderbooks(
-            EXCHANGES,  # exchange
-            BASE_CURRENCY,  # base_sym # quote_sym # limit
-        )
-
+        orderbooks = SK.fetch_orderbooks(EXCHANGES,  BASE_CURRENCY,  )
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
-        # print(BALANCE_DICT)
         TM.sleep(float(delay))
 
         
-
-
 if __name__ == "__main__":
     main()
+    # "sell_on" : f"sell on {top_bid_xch:<9} for {float(top_bid - bid_fee):<.7f}",
+    # "buy_on" : f"buy on {top_ask_xch:<10} for {float(top_ask - ask_fee):<.7f}",

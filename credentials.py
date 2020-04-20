@@ -26,7 +26,7 @@ passport = {
         "API_KEY": "5e2b14d240a72a00096a60e3",
         "API_SECRET": "8dd0eb3c-e30b-4f4c-a30f-781592fd7150",
         "API_PASSPHRASE": "hstyles",
-        
+        "TRADING_PHRASE": 722248,
     },
     "hitbtc" : {
         "API_KEY" : "hiU58iiT0qMISwyxrG-U_kEcjZLoc2wG",

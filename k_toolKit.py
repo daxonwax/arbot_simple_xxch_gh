@@ -297,6 +297,19 @@ class Toolkit(object):
         }
         return truthy_index[truth]
 
+    def color_palette(self, truth, index):
+        color_dict = {
+            True: {
+                0: {"fg_color": "darkGray", "bg_color": "green"},
+                1: {"fg_color": "gray", "bg_color": "green"},
+            },
+            False: {
+                0: {"fg_color": "ghostWhite", "bg_color": "darkGray"},
+                1: {"fg_color": "magenta", "bg_color": "darkGray"},
+            },
+        }
+        return color_dict[truth][index]
+
     def isprofitable(self, truth):
         if truth <= 0:
             return False
