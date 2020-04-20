@@ -460,7 +460,8 @@ def main():
             BALANCE_FLAG = False
         orderbooks = SK.fetch_orderbooks(EXCHANGES,  BASE_CURRENCY,  )
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
-        TM.sleep(float(delay))
+        
+        # TM.sleep(float(delay))
 
         
 if __name__ == "__main__":
