@@ -468,7 +468,7 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
             toolkit.quitter(True)
 
         else:
-            print(f"        {run}        ",  end='\r', flush=True)
+            print(f"     run        {run}        ",  end='\r', flush=True)
 
         # if bid_acct_bal_BTC <= pro_rata_bid_BTC:
         #     resolve(toolkit, args_list, False,  "bid_bal" )
@@ -500,8 +500,9 @@ def main():
             BALANCE_FLAG = False
         orderbooks = SK.fetch_orderbooks(EXCHANGES,  BASE_CURRENCY,  )
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
-        TK.cprint(f"run {RUN} done")
-        print("lovely",  flush=True)
+        TK.print(f"     run        {RUN} : done       ",  end='\r', flush=True)
+
+
         # TM.sleep(float(delay))
 
         
