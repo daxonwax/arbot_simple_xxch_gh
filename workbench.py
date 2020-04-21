@@ -491,6 +491,7 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
 def main():
     BALANCE_FLAG = True
     number_of_runs=input("How many consequetive runs:   ")
+    os.system("clear")
     # delay=input("Delay between runs (secs):    ")
     for RUN in range(int(number_of_runs)):  # while True:
         NOW = TK.create_timestamp(forfile=True)
