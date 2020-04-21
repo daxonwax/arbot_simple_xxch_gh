@@ -170,6 +170,43 @@ def pro_rate(val, rate_amt=PRO_RATA_MULTIPLIER):
 def update_profit(profit_list):
     return [pro_rate(val) for val in profit_list]
 
+
+
+def describe(toolkit, description, top_bid_xch, top_ask_xch):
+
+    desc_dict = {
+        "bid_bal" : f"        NOT ENOUGH FUNDS @{top_bid_xch.upper():<8}         ",
+        "ask_bal" : f"        NOT ENOUGH FUNDS @{top_ask_xch.upper():<8}         ",
+        "threshold": "        DID NOT BREACH THRESHOLD",
+    }
+    
+    toolkit.cprint(
+        desc_dict[description],
+        fg_color="gray",
+        bg_color="darkGray"
+    )
+    return  desc_dict[description]
+    
+
+def quitting(description):
+    quit_disc = {
+        "bid_bal"     : True,
+        "ask_bal"   : True,
+        "threshold"  : False
+    }
+    return quit_disc[description]
+
+
+def resolve(toolkit, args_list, proceed,  description):
+    args_list+=[proceed, description ]
+    display_run(*args_list)
+    toolkit.quitter(quitting(description))
+    return 200
+
+
+
+
+
 # @DK.print_timing
 def display_run(
             toolkit,
@@ -270,6 +307,8 @@ def display_run(
         SPACE(vertical=1)
         LINE()
         LINE()
+        
+
 
     else:
         toolkit.cprint(
@@ -277,26 +316,11 @@ def display_run(
             fg_color="ghostWhite",
             bg_color="magenta"
                         )
+        
+        describe(toolkit, description, top_bid_xch, top_ask_xch)
+   
 
-    if description=="bid_bal":
-        toolkit.cprint(
-            f"        NOT ENOUGH FUNDS @{top_bid_xch.upper():<8}         ",
-            fg_color="gray",
-            bg_color="darkGray"
-                        )
-        toolkit.quitter(True)
-    if description=="ask_bal":
-        toolkit.cprint(
-            f"        NOT ENOUGH FUNDS @{top_ask_xch.upper():<8}         ",
-            fg_color="gray",
-            bg_color="darkGray"
-                        )
-    if description=="threshold":
-        toolkit.cprint(
-            "        DID NOT BREACH THRESHOLD",
-            fg_color="gray",
-            bg_color="darkGray"
-                        )
+    
 
 # @DK.print_timing
 def place_order(
@@ -305,20 +329,21 @@ def place_order(
     quote,
     asset_amount
      ):
-        create_trade_response = SK.client.create_trade(
+        # create_trade_response = SK.client.create_trade(
+        #     credentials.passport["shrimpy"]["USER_ID"],
+        #     credentials.passport["shrimpy"]["ACCOUNTS"][str(xch).lower()]["ID"],
+        #     SK.safe_currency(base, xch ),
+        #     SK.safe_currency(quote, xch),
+        #     float(decimal.Decimal(asset_amount).quantize(decimal.Decimal(".00000001"), rounding=decimal.ROUND_DOWN ))
+        # )
+        print(
             credentials.passport["shrimpy"]["USER_ID"],
             credentials.passport["shrimpy"]["ACCOUNTS"][str(xch).lower()]["ID"],
             SK.safe_currency(base, xch ),
             SK.safe_currency(quote, xch),
-            float(decimal.Decimal(asset_amount).quantize(decimal.Decimal(".00000001"), rounding=decimal.ROUND_DOWN ))
+            float(decimal.Decimal(asset_amount).quantize(decimal.Decimal(".00000001"), rounding=decimal.ROUND_DOWN )),
+            flush=True
         )
-        # print(
-        #     credentials.passport["shrimpy"]["USER_ID"],
-        #     credentials.passport["shrimpy"]["ACCOUNTS"][xch.lower()],
-        #     base,
-        #     SK.safe_currency(quote,  xch.lower()),
-        #     asset_amount
-        # )
         return create_trade_response
 
 
@@ -391,55 +416,68 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
 
         
         args_list = [toolkit, now, run, base_sym, quote_sym, top_bid_xch, top_ask_xch, bid_acct_bal_BTC, bid_acct_bal_USD, ask_acct_bal_BTC, ask_acct_bal_USD, top_bid_prc_USD, top_ask_prc_USD, top_bid_fee, top_ask_fee, bid_inc_fees_USD,    ask_inc_fees_USD, profit_inc_fees_USD, pro_rata_bid_USD, pro_rata_ask_USD, PRORATA_PROFIT_USD, MAXPROFIT_USD,  TTL_BALANCE_BTC_I, TTL_BALANCE_USD_I]
+        
         args_list_headers =  [ "toolkit","now","run","base_sym","quote_sym","top_bid_xch","top_ask_xch","bid_acct_bal_BTC","bid_acct_bal_USD","ask_acct_bal_BTC","ask_acct_bal_USD","top_bid_prc_USD","top_ask_prc_USD","top_bid_fee","top_ask_fee","bid_inc_fees_USD","ask_inc_fees_USD","profit_inc_fees_USD","pro_rata_bid_USD","pro_rata_ask_USD","PRORATA_PROFIT_USD", "MAXPROFIT_USD", "TTL_BALANCE_BTC_IN","TTL_BALANCE_US_IN", "proceed", "description"]
        
-        orders = [[top_bid_xch, base_sym, quote_sym, pro_rata_bid_BTC], [ top_ask_xch, quote_sym, base_sym, pro_rata_ask_USD]]
+        orders = [
+            [
+                top_bid_xch, 
+                base_sym, 
+                quote_sym, 
+                pro_rata_bid_BTC
+            ], 
+            [ 
+                top_ask_xch, 
+                quote_sym, 
+                base_sym, 
+                pro_rata_ask_USD
+            ]
+    ]
 
         if (PRORATA_PROFIT_USD > THRESHOLD and bid_acct_bal_BTC > pro_rata_bid_USD and ask_acct_bal_USD > pro_rata_ask_USD):
             with multiprocessing.dummy.Pool(2) as pool:
                 results = pool.starmap(place_order, [order_arg for order_arg in orders])   
+                statii = [
+                    [top_bid_xch, results[0] ['id']], 
+                    [top_ask_xch, results[1] ['id']]
+                    ]
+                status = pool.starmap(order_status, [status_id for status_id in statii])
+            pool.close()
+            pool.join()
+            # try:
+            #     statii = [
+            #         [top_bid_xch, results[0] ['id']], 
+            #         [top_ask_xch, results[1] ['id']]
+            #         ]
+            #     with multiprocessing.dummy.Pool(2) as pool:
+            #         status = pool.starmap(order_status, [status_id for status_id in statii])
 
-            try:
-                statii = [[top_bid_xch, results[0] ['id']], [top_ask_xch, results[1] ['id']]]
-                with multiprocessing.dummy.Pool(2) as pool:
-                    status = pool.starmap(order_status, [status_id for status_id in statii])
-
-            except Exception as e:
-                print(e)
+            # except Exception as e:
+            #     print(e)
     
             TTL_BALANCE_BTC_O, TTL_BALANCE_USD_O = collect_balance_figures(balance_values)        
             proceed=True
-            description=None
+            description='"arbitrage"'
             args_list+=[proceed,  description,  TTL_BALANCE_BTC_O, TTL_BALANCE_USD_O]
             args_list_headers+=['TL_BALANCE_BTC_OUT', 'TTL_BALANCE_USD_OUT']
             display_run(*args_list)
-            # write_csv_data_to_disk(tabulate(results))
-            TK.JSON_file_writer(JSON_FILE_PATH, status)
-            TK.CSVFilePrinter(CSV_FILE_PATH_PLACED, results, "w")
+            write_csv_data_to_disk(CSV_FILE_PATH_PLACED,run,args_list_headers,args_list)
+            toolkit.JSON_file_writer(JSON_FILE_PATH, status)
+            toolkit.CSVFilePrinter(CSV_FILE_PATH_PLACED, results, "w")
             print(status)
             toolkit.quitter(True)
 
 
+
         if bid_acct_bal_BTC <= pro_rata_bid_BTC:
-            proceed=False
-            description="bid_bal"    
-            args_list+=[proceed, description ]
-            display_run(*args_list)
-            toolkit.quitter(True)
+            resolve(toolkit, args_list, False,  "bid_bal" )
 
         if ask_acct_bal_USD <= pro_rata_ask_USD:
-            proceed=False
-            description="ask_bal"  
-            args_list+=[proceed, description ]
-            display_run(*args_list)
-            toolkit.quitter(True)
+            resolve(toolkit, args_list, False,  "ask_bal" )
             
         if PRORATA_PROFIT_USD < THRESHOLD :
-            proceed=False
-            description="threshold"  
-            args_list+=[proceed, description ]
-            display_run(*args_list)
-            toolkit.quitter(False)
+            resolve(toolkit, args_list, False,  "threshold" )
+
             
             
     write_csv_data_to_disk(CSV_FILE_PATH_NONE,run,args_list_headers,args_list)
