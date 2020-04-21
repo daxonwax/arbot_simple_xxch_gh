@@ -501,7 +501,7 @@ def main():
         orderbooks = SK.fetch_orderbooks(EXCHANGES,  BASE_CURRENCY,  )
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
         TK.cprint(f"run {run} done"")
-        
+        print("lovely", flush=True)
         # TM.sleep(float(delay))
 
         
