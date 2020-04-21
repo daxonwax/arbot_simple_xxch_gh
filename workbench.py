@@ -30,7 +30,7 @@ SK = k_shrimpyKit.Shrimpykit(PUBLIC_KEY, PRIVATE_KEY)
 DK = k_decoratorKit.Decoratorkit()
 MASTER_TIMESTAMP = TK.create_timestamp(forfile=True)
 # EXCHANGE_PAIRS = common_exchange_pairs.exchange_pairs
-THRESHOLD = 0.50
+THRESHOLD = 0.15
 PRO_RATA_MULTIPLIER = 0.01
 MAXPROFIT_USD = -10000000000
 ADJ_MAXPROFIT_USD = -10000000000
