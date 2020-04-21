@@ -467,20 +467,21 @@ def arbitrage(now, run, orderbooks, toolkit, balance_values,  xch_status=[], spa
             print(status)
             toolkit.quitter(True)
 
+        else:
+            print(f"        {run}        ",  end='\r', flush=True)
 
+        # if bid_acct_bal_BTC <= pro_rata_bid_BTC:
+        #     resolve(toolkit, args_list, False,  "bid_bal" )
 
-        if bid_acct_bal_BTC <= pro_rata_bid_BTC:
-            resolve(toolkit, args_list, False,  "bid_bal" )
-
-        if ask_acct_bal_USD <= pro_rata_ask_USD:
-            resolve(toolkit, args_list, False,  "ask_bal" )
+        # if ask_acct_bal_USD <= pro_rata_ask_USD:
+        #     resolve(toolkit, args_list, False,  "ask_bal" )
             
-        if PRORATA_PROFIT_USD < THRESHOLD :
-            resolve(toolkit, args_list, False,  "threshold" )
+        # if PRORATA_PROFIT_USD < THRESHOLD :
+        #     resolve(toolkit, args_list, False,  "threshold" )
 
             
             
-    write_csv_data_to_disk(CSV_FILE_PATH_NONE,run,args_list_headers,args_list)
+    # write_csv_data_to_disk(CSV_FILE_PATH_NONE,run,args_list_headers,args_list)
        
     return xch_status
 
