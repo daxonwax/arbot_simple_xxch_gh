@@ -500,7 +500,7 @@ def main():
             BALANCE_FLAG = False
         orderbooks = SK.fetch_orderbooks(EXCHANGES,  BASE_CURRENCY,  )
         arbitrage(NOW, RUN, orderbooks, TK, BALANCE_DICT)
-        TK.print(f"     run        {RUN} : done       ",  end='\r', flush=True)
+        TK.cprint(f"     run        {RUN} : done       ",  end='\r', flush=True)
 
 
         # TM.sleep(float(delay))
